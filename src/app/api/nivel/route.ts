@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     // Store in Blob
     const filename = `sscap/nivel/${now.replace(/:/g, '-')}-${id}.json`;
     await put(filename, JSON.stringify(record), {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
     });
 
