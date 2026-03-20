@@ -36,9 +36,10 @@ export async function POST(request: Request) {
       { captado: record },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error saving to Blob:", error);
     return NextResponse.json(
-      { success: false, message: "captado_not_saved" },
+      { success: false, message: "captado_not_saved", error: error.message },
       { status: 400 }
     );
   }
