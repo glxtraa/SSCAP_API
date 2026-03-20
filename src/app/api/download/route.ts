@@ -4,15 +4,18 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const allData = [];
-    const { blobs } = await list({
-      prefix: 'sscap/',
-    });
+    // List all blobs (no prefix to be safe)
+    const response = await list();
+    const blobs = response.blobs;
 
     if (blobs.length === 0) {
-      return NextResponse.json({ success: true, message: "no_data_found", data: [] });
+      return NextResponse.json({ success: true, message: "no_blobs_found_in_store", count: 0 });
     }
 
     for (const blob of blobs) {
+      // Only process files in our sscap folder
+      if (!blob.pathname.startsWith('sscap/')) continue;
+
       try {
         const res = await fetch(blob.url);
         if (res.ok) {
@@ -20,27 +23,28 @@ export async function GET() {
           allData.push({
             filename: blob.pathname,
             uploadedAt: blob.uploadedAt,
-            url: blob.url,
             content
           });
         }
       } catch (e) {
-        console.error(`Failed to fetch blob ${blob.url}:`, e);
-        // Continue to next blob even if one fails
+        console.error(`Error fetching ${blob.url}:`, e);
       }
     }
 
-    return new NextResponse(JSON.stringify(allData, null, 2), {
+    return new NextResponse(JSON.stringify({
+      total_blobs_found: blobs.length,
+      sscap_records_processed: allData.length,
+      data: allData
+    }, null, 2), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": 'attachment; filename="sscap_full_backup.json"',
+        "Content-Disposition": 'attachment; filename="sscap_data_export.json"',
       },
     });
   } catch (error: any) {
-    console.error("Download endpoint error:", error);
     return NextResponse.json(
-      { success: false, message: "download_failed", error: error.message },
+      { success: false, message: "download_route_failed", error: error.message },
       { status: 500 }
     );
   }
