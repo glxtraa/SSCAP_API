@@ -18,7 +18,7 @@ async function downloadData() {
       const response = await list({
         prefix: 'sscap/',
         cursor,
-        token: process.env.BLOB_READ_WRITE_TOKEN,
+    token: process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_PUBLIC_READ_WRITE_TOKEN,
       });
 
       for (const blob of response.blobs) {
