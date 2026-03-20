@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       data: {
         tlaloque_id,
         pulses,
-        used_at: new Date(used_at).toISOString(),
+        used_at,
       },
       metadata: {
         ip: request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for'),

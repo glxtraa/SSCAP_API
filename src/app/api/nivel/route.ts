@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       data: {
         tlaloque_id,
         meters,
-        catched_at: new Date(catched_at).toISOString(),
+        catched_at,
       },
       metadata: {
         ip: request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for'),
