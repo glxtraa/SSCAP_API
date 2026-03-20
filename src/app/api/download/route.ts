@@ -1,6 +1,8 @@
 import { list } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const allData = [];
@@ -17,7 +19,7 @@ export async function GET() {
       if (!blob.pathname.startsWith('sscap/')) continue;
 
       try {
-        const res = await fetch(blob.url);
+        const res = await fetch(blob.url, { cache: 'no-store' });
         if (res.ok) {
           const content = await res.json();
           allData.push({
