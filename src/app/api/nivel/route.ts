@@ -17,9 +17,17 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
 
     const record = {
-      tlaloque_id,
-      meters,
-      catched_at: new Date(catched_at).toISOString(),
+      data: {
+        tlaloque_id,
+        meters,
+        catched_at: new Date(catched_at).toISOString(),
+      },
+      metadata: {
+        ip: request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for'),
+        city: request.headers.get('x-vercel-ip-city'),
+        country: request.headers.get('x-vercel-ip-country'),
+        userAgent: request.headers.get('user-agent'),
+      },
       id,
       updated_at: now,
       created_at: now,
