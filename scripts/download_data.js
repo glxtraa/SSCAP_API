@@ -1,37 +1,44 @@
-const { createClient } = require('@vercel/kv');
+const { list } = require('@vercel/blob');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-async function downloadData() {
-  const kv = createClient({
-    url: process.env.KV_REST_API_URL,
-    token: process.env.KV_REST_API_TOKEN,
-  });
+// Note: @vercel/blob's 'list' and manual 'fetch' are used here.
+// You must have BLOB_READ_WRITE_TOKEN in your .env file.
 
-  console.log('Fetching all keys from Vercel KV...');
+async function downloadData() {
+  console.log('Fetching all blobs from Vercel Blob...');
   
   let allData = [];
-  let cursor = '0';
+  let hasMore = true;
+  let cursor = undefined;
 
   try {
-    do {
-      const [nextCursor, keys] = await kv.scan(cursor, { match: 'sscap:*', count: 100 });
-      cursor = nextCursor;
+    while (hasMore) {
+      const response = await list({
+        prefix: 'sscap/',
+        cursor,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
 
-      for (const key of keys) {
-        const value = await kv.get(key);
-        allData.push({ key, value });
+      for (const blob of response.blobs) {
+        console.log(`Downloading ${blob.pathname}...`);
+        const res = await fetch(blob.url);
+        const data = await res.json();
+        allData.push({ pathname: blob.pathname, data });
       }
-    } while (cursor !== '0');
+
+      hasMore = response.hasMore;
+      cursor = response.cursor;
+    }
 
     const outputPath = path.join(__dirname, '..', 'data_backup.json');
     fs.writeFileSync(outputPath, JSON.stringify(allData, null, 2));
     
-    console.log(`Success! ${allData.length} records downloaded to ${outputPath}`);
+    console.log(`\nSuccess! ${allData.length} records downloaded to ${outputPath}`);
   } catch (error) {
     console.error('Error downloading data:', error.message);
-    console.log('\nMake sure you have KV_REST_API_URL and KV_REST_API_TOKEN in your .env file.');
+    console.log('\nMake sure you have BLOB_READ_WRITE_TOKEN in your .env file.');
   }
 }
 

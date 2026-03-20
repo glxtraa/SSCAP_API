@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -25,9 +25,12 @@ export async function POST(request: Request) {
       created_at: now,
     };
 
-    // Store in KV
-    const key = `sscap:captado:${now}:${id}`;
-    await kv.set(key, record);
+    // Store in Blob
+    const filename = `sscap/captado/${now.replace(/:/g, '-')}-${id}.json`;
+    await put(filename, JSON.stringify(record), {
+      access: 'public',
+      addRandomSuffix: false,
+    });
 
     return NextResponse.json(
       { captado: record },
